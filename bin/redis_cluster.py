@@ -33,17 +33,18 @@ class RedisClusterInfo(object):
 		Returns:
 			cluster_info_dict: redis cluster metrics dict.
 		"""	
-		cluster_command = "redis-cli -h " + self.addr + " -p " + str(self.port) + " --password " + self.password  + "cluster info"
-		if (self.password == ""):	# If password is empty, replcate the password arg
-			cluster_command = cluster_command.replace("--password"," ")
+		cluster_command = "/opt/redis/bin/redis-cli -c -h " + self.addr + " -p " + str(self.port) + " cluster info"
 		cluster_info = commands.getoutput(cluster_command)	
 		cluster_info_list =  cluster_info.replace("\r\n"," ").replace("\r","").split(" ")
 		
 		cluster_info_dict_all = {}	
 		cluster_info_dict = {}
 		for cluster_info_time in cluster_info_list:
-			item_list = cluster_info_time.split(":")
-			cluster_info_dict_all[item_list[0]] = item_list[1]
+			if cluster_info_time.find(":") > -1:
+				item_list = cluster_info_time.split(":")
+				cluster_info_dict_all[item_list[0]] = item_list[1]
+			else:
+				pass
 		# clear the cluster info 
 		if cluster_info_dict_all.has_key("cluster_state"):
 	
@@ -52,6 +53,7 @@ class RedisClusterInfo(object):
 				cluster_info_dict["cluster_state"] = 1
 		else:
 			 cluster_info_dict["cluster_state"] = 0
+
 		cluster_info_dict["cluster_slots_assigned"] = cluster_info_dict_all["cluster_slots_assigned"]
 		cluster_info_dict["cluster_slots_ok"] = cluster_info_dict_all["cluster_slots_ok"]
 		cluster_info_dict["cluster_slots_pfail"] = cluster_info_dict_all["cluster_slots_pfail"]
